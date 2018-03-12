@@ -7,19 +7,24 @@ var router = express.Router();
 var crypto = require("crypto");
 var async = require("async");
 var Page = require("../utils/page");
-
+var User = DB.get('User');
+debugger;
 function getClientIp(req) {
     return req.connection.remoteAddress || req.headers['x-forwarded-for'] || req.headers['x-real-ip'] ||
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
 };
 
+function login(req) {
+
+}
 router.post("/login", function (req, res) {
-    var User = DB.get("User");
+    // var User = DB.get("User");
     var params = req.body;
     var sha1 = crypto.createHash('sha1');
     sha1.update(params.password);
     params.password = sha1.digest('hex');
+    debugger;
     User.where(params, function (err, result) {
         if (err) {
             next(err);
@@ -27,7 +32,6 @@ router.post("/login", function (req, res) {
             if (result && result.length > 0) {
                 req.session.user = result[0];
                 var ip_ = getClientIp(req);
-                console.log(ip_);
                 var params = { id_: result[0].id_, lastlogintime: new Date(), lastloginip: ip_ };//更新登录时间
                 User.update(params);
                 res.redirect("/");
@@ -37,8 +41,9 @@ router.post("/login", function (req, res) {
         }
     });
 });
+
 router.post("/register", function (req, res, next) {
-    var User = DB.get("User");
+    // var User = DB.get("User");
     var user = req.body;
     user.registertime = new Date();
     user.role = "2";
@@ -46,31 +51,52 @@ router.post("/register", function (req, res, next) {
     if (!user.desc || user.desc == "") {
         user.desc = "无说明，特优秀";
     }
-    //加密，密码不加密
-    User.where({ username: user.username.trim() }, function (err, result) {
-        if (err) {
-            next(err);
-        } else {
-            if (result && result.length > 0) {
-                res.render('register', { message: '帐号不能重复，请更换用户名' });
+    if (user.password != user.npassword) {
+        res.render('register', { message: '两次输入的密码不一致'});        
+    } else {
+        //加密，密码不加密
+        User.where({ username: user.username.trim() }, function (err, result) {
+            if (err) {
+                next(err);
             } else {
-                var sha1 = crypto.createHash('sha1');
-                sha1.update(user.password);
-                user.password = sha1.digest('hex');
-                User.insert(user, function (err, result) {
-                    if (err) {
-                        next(err);
-                    } else {
-                        res.redirect("/");
-                    }
-                });
+                if (result && result.length > 0) {
+                    res.render('register', { message: '帐号不能重复，请更换用户名' });
+                } else {
+                    var sha1 = crypto.createHash('sha1');
+                    sha1.update(user.password);
+                    user.password = sha1.digest('hex');
+                    User.insert(user, function (err, result) {
+                        if (err) {
+                            next(err);
+                        } else {
+                            User.where({
+                                username: user.username.trim(),
+                                password: user.password,
+                            }, function (err, result) {
+                                if (err) {
+                                    next(err);
+                                } else {
+                                    if (result && result.length > 0) {
+                                        req.session.user = result[0];
+                                        var ip_ = getClientIp(req);
+                                        var params = { id_: result[0].id_, lastlogintime: new Date(), lastloginip: ip_ };//更新登录时间
+                                        User.update(params);
+                                        res.redirect("/");
+                                    } 
+                                }
+                            });
+                            // res.redirect("/");
+                        }
+                    });
+                }
             }
-        }
-    });
+        });
+    }
+
 });
 /////////我的信息/////////
 router.get("/info/:linkType", function (req, res, next) {
-    var User = DB.get("User");
+    // var User = DB.get("User");
     var userid = req.session.user.id_;
     var linkType = req.params.linkType;
     var Article = DB.get("Article");
@@ -125,7 +151,7 @@ router.get("/info/:linkType", function (req, res, next) {
 });
 ///////查看用户////////////
 router.get("/view/:id/:linkType", function (req, res, next) {
-    var User = DB.get("User");
+    // var User = DB.get("User");
     var linkType = req.params.linkType;
     var Article = DB.get("Article");
     var page = new Page({ page: (req.query.ipage || 1), pageSize: 15 });
@@ -170,7 +196,7 @@ router.get("/view/:id/:linkType", function (req, res, next) {
 
 
 router.post("/udpate", function (req, res, next) {
-    var User = DB.get("User");
+    // var User = DB.get("User");
     var user = req.body;
     delete user["account"];
     user.updated = new Date();

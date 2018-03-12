@@ -6,12 +6,16 @@
 var mq = require("mysql");
 var logger = require('./logger');
 var util = require("util");
-var conf = require("../config.js");
 var uuid = require("node-uuid");
 var pool = null;
 var db = null;
-console.log("conf");
-console.log(conf);
+var dbConfig = { 
+    host: 'localhost',
+    port: '3306',
+    user: 'root',
+    password: '',
+    database: 'test',
+};
 function Table(tablename, util, fields) {
     this.tablename = tablename;
     this.pool = util.pool;
@@ -36,6 +40,7 @@ Table.prototype.checkTable = function (values) {
 }
 //clear表字段
 Table.prototype.clearTable = function (values) {
+    console.log(values)
     if (values && this.fields) {
         for (var prop in values) {
             var flag = false;
@@ -284,7 +289,7 @@ Table.prototype.where = function (params, orders, callback) {
     if ((typeof orders == 'function') && orders.constructor == Function) {
         callback = orders;
     }
-
+    console.log(sql);
     this.getConnection(function (connection) {
         var query = connection.query(sql, function (err, result) {
             if (err) {
@@ -437,19 +442,10 @@ Table.prototype.executeSql = function (sql, params, callback) {
     }
 };*/
 
+//单例模式 创建一个 mysql连接池
 var createPool = function () {
     if (pool == null) {
-        pool = mq.createPool({
-            email: 'tangdu0228yes@163.com',
-            appport: 3000,
-            host: 'localhost',
-            port: '3306',
-            user: 'root',
-            password: '',
-            database: 'test',
-            logger_path: "./bin/logs/error.log",
-            logger_level: 'debug' //debug | error
-        });
+        pool = mq.createPool(dbConfig);
     }
     return pool;
 }
@@ -457,6 +453,7 @@ var createPool = function () {
 //查询工具类
 function DBUtil() {
     this.pool = createPool();
+    //待 查询的 数据表
     this.tables = [];
 };
 

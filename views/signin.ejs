@@ -21,6 +21,7 @@
     </style>
 </head>
 <body>
+<%- include topbar.ejs %>        
 <div class="container">
     <form class="center-block form-signin" role="form" action="/user/login" method="post" style="border-top: 2px solid #126d8d">
         <% if(message) { %>
@@ -46,7 +47,8 @@
     </form>
     <a href="/" class="center-block"
        style="width:300px;margin-top:20px;overflow: hidden;"><-返回<%= Sys.cont.siteName %></a>
-</div>
+</div>  
+<%- include footer.ejs %>        
 <script src="/static/js/jquery-1.10.1.min.js"></script>
 <script src="/static/js/site.min.js"></script>
 </body>
