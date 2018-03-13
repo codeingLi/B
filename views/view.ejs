@@ -4,6 +4,14 @@
     <title><%=title%> | <%= Sys.cont.siteName %></title>
     <%- include header.ejs %>
 </head>
+<style>
+        .pagination-show {
+            display: block;
+        }
+        .pagination-hide {
+            display: none;
+        }
+    </style>
 <body>
 <%- include topbar.ejs %>
 
@@ -43,27 +51,29 @@
                     <br>
                 </div>
             </div>
-            <ul class="pagination">
-                <%if((parseInt(artidesLife.page)-1)<1){%>
-                    <li class="disabled"><a href="#">«</a></li>
-                <%}else{%>
-                    <li><a href="/index?ipage=1%>">«</a></li>
-                <%}%>
-
-                <% for(var i=1;i<=artidesLife.totalPage;i++){%>
-                    <%if(artidesLife.page==i){%>
-                        <li class="active"><a href="/index?ipage=<%=i%>"><%=i%><span class="sr-only">(current)</span></a></li>
-                    <%}else{%>
-                        <li><a href="/index?ipage=<%=i%>"><%=i%><span class="sr-only">(current)</span></a></li>
-                    <%}%>
-                <%}%>
-
-                <%if( (parseInt(artidesLife.page)+1)>artidesLife.totalPage){%>
-                    <li class="disabled"><a href="#">»</a></li>
-                <%}else{%>
-                    <li><a href="/index?ipage=<%=(parseInt(artidesLife.page)+1)%>">»</a></li>
-                <%}%>
-            </ul>
+            <div class="<%= parseInt(artidesLife.totalPage) > 1 ? "pagination-show" : "pagination-hide"%>">
+                <ul class="pagination">
+                        <%if((parseInt(artidesLife.page)-1)<1){%>
+                            <li class="disabled"><a href="#">«</a></li>
+                        <%}else{%>
+                            <li><a href="/index?ipage=1%>">«</a></li>
+                        <%}%>
+        
+                        <% for(var i=1;i<=artidesLife.totalPage;i++){%>
+                            <%if(artidesLife.page==i){%>
+                                <li class="active"><a href="/index?ipage=<%=i%>"><%=i%><span class="sr-only">(current)</span></a></li>
+                            <%}else{%>
+                                <li><a href="/index?ipage=<%=i%>"><%=i%><span class="sr-only">(current)</span></a></li>
+                            <%}%>
+                        <%}%>
+        
+                        <%if( (parseInt(artidesLife.page)+1)>artidesLife.totalPage){%>
+                            <li class="disabled"><a href="#">»</a></li>
+                        <%}else{%>
+                            <li><a href="/index?ipage=<%=(parseInt(artidesLife.page)+1)%>">»</a></li>
+                        <%}%>
+                    </ul>
+            </div>
         </div>
 
         <div class="col-md-3">

@@ -9,7 +9,7 @@ var app = {
     logger_level: 'debug' //debug | error
 };
 
-global.Sys = new function () {
+global.Sys = new function () {  
     var me = this;
     this.cont = {
         //菜单常量

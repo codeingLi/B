@@ -269,14 +269,19 @@
             return;
         }
         //validate
-        var usercomment=$("#commentform textarea[name=usercomment]").val();
+        var usercomment=$("#commentform textarea[name=usercomment]")[0].value;
         if(usercomment==null || usercomment==""){
             $.showErr("回复内容不能为空!");
             return;
         }
-
+        var pattern = new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>~！@#￥……&*（）——|{}【】‘；：”“'。，、？]");
+        var rs = ""; 
+        for (var i = 0; i < usercomment.length; i++) { 
+            rs = rs+usercomment.substr(i, 1).replace(pattern, ''); 
+        }
+        // usercomment = usercomment.toStinrg();
         $.post('/comment/add_comment',
-        {artideid:$("#submitComment").attr("value"),comment:usercomment},
+        {artideid:$("#submitComment").attr("value"),comment:rs},
         function(data){
             if(data.success){
                 initComment(data.userComment);

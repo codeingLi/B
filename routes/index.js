@@ -26,7 +26,7 @@ function createView(link) {
             function (cb) {
                 var data = {};
                 var params = null;
-                var page = new Page({ page: ipage, pageSize: 20 });
+                var page = new Page({ page: ipage, pageSize: 15 });
                 var sql = "SELECT\n" +
                     "	t1.*, (\n" +
                     "		SELECT\n" +
@@ -78,6 +78,7 @@ function createView(link) {
             results.activeTab = "";
             results.title = link.key;
             if (link.value === "index") {
+                console.log(results)
                 res.render('index', results);
             } else {
                 res.render('view', results);

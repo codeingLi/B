@@ -4,6 +4,14 @@
     <title>首页 | <%= Sys.cont.siteName %></title>
     <%- include header.ejs %>
 </head>
+    <style>
+        .pagination-show {
+            display: block;
+        }
+        .pagination-hide {
+            display: none;
+        }
+    </style>
 <body>
 <%- include topbar.ejs %>
 
@@ -45,27 +53,29 @@
                     <br>
                 </div>
             </div>
-            <ul class="pagination" >
-                <%if((parseInt(artidesLife.page)-1)<1){%>
-                    <li class="disabled"><a href="#">«</a></li>
-                <%}else{%>
-                    <li><a href="/index?ipage=1">«</a></li>
-                <%}%>
-
-                <% for(var i=1;i<=artidesLife.totalPage;i++){%>
-                    <%if(artidesLife.page==i){%>
-                        <li class="active"><a href="/index?ipage=<%=i%>"><%=i%><span class="sr-only">(current)</span></a></li>
+            <div  class="<%= parseInt(artidesLife.totalPage) > 1 ? "pagination-show" : "pagination-hide"%>">
+                <ul class="pagination">
+                    <%if((parseInt(artidesLife.page)-1)<1){%>
+                        <li class="disabled"><a href="#">«</a></li>
                     <%}else{%>
-                        <li><a href="/index?ipage=<%=i%>"><%=i%><span class="sr-only">(current)</span></a></li>
+                        <li><a href="/index?ipage=1">«</a></li>
                     <%}%>
-                <%}%>
 
-                <%if( (parseInt(artidesLife.page)+1)>artidesLife.totalPage){%>
-                    <li class="disabled"><a href="#">»</a></li>
-                <%}else{%>
-                    <li><a href="/index?ipage=<%=(parseInt(artidesLife.page)+1)%>">»</a></li>
-                <%}%>
-            </ul>
+                    <% for(var i=1;i<=artidesLife.totalPage;i++){%>
+                        <%if(artidesLife.page==i){%>
+                            <li class="active"><a href="/index?ipage=<%=i%>"><%=i%><span class="sr-only">(current)</span></a></li>
+                        <%}else{%>
+                            <li><a href="/index?ipage=<%=i%>"><%=i%><span class="sr-only">(current)</span></a></li>
+                        <%}%>
+                    <%}%>
+
+                    <%if( (parseInt(artidesLife.page)+1)>artidesLife.totalPage){%>
+                        <li class="disabled"><a href="#">»</a></li>
+                    <%}else{%>
+                        <li><a href="/index?ipage=<%=(parseInt(artidesLife.page)+1)%>">»</a></li>
+                    <%}%>
+                </ul>
+            </div>  
         </div>
 
         <div class="col-md-3">
@@ -82,7 +92,7 @@
                     <div>
                     </div>
                     <div>
-                        <a href="https://github.com/tangdu/mblog" class="label label-success" target="_blank">访问GitHub</a>
+                        <a class="label label-primary" href="https://juejin.im/user/59d609f7f265da0665640927">掘金</a>
                         <a class="label label-primary" href="/update">更新记录</a>
                     </div>
                 </div>
