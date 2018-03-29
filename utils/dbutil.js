@@ -9,38 +9,39 @@ var util = require("util");
 var uuid = require("node-uuid");
 var pool = null;
 var db = null;
-var dbConfig = { 
+var dbConfig = {
     host: 'localhost',
     port: '3306',
     user: 'root',
     password: '',
     database: 'test',
 };
+
 function Table(tablename, util, fields) {
     this.tablename = tablename;
     this.pool = util.pool;
     this.fields = fields;
 }
 //检查表字段
-Table.prototype.checkTable = function (values) {
-    if (values && this.fields) {
-        var flag = false;
-        this.fields.forEach(function (r) {
-            for (var prop in values) {
-                if (r === prop || r.name === prop) {
-                    flag = true;
+Table.prototype.checkTable = function(values) {
+        if (values && this.fields) {
+            var flag = false;
+            this.fields.forEach(function(r) {
+                for (var prop in values) {
+                    if (r === prop || r.name === prop) {
+                        flag = true;
+                    }
                 }
-            }
-            if (!flag) {
-                return false;
-            }
-        });
+                if (!flag) {
+                    return false;
+                }
+            });
+        }
+        return true;
     }
-    return true;
-}
-//clear表字段
-Table.prototype.clearTable = function (values) {
-    console.log(values)
+    //clear表字段
+Table.prototype.clearTable = function(values) {
+    // console.log(values)
     if (values && this.fields) {
         for (var prop in values) {
             var flag = false;
@@ -59,11 +60,11 @@ Table.prototype.clearTable = function (values) {
     }
     return true;
 }
-Table.prototype.getConnection = function (callback) {
+Table.prototype.getConnection = function(callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
-    this.pool.getConnection(function (err, connection) {
+    this.pool.getConnection(function(err, connection) {
         if (err) {
             throw err;
         }
@@ -72,21 +73,21 @@ Table.prototype.getConnection = function (callback) {
 };
 
 //save
-Table.prototype.insert = function (values, callback) {
+Table.prototype.insert = function(values, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     var me = this;
     if (this.clearTable(values)) {
         if (typeof values["id_"] == 'underfined' || values["id_"] == null || values["id_"] === "") {
             values["id_"] = uuid.v1();
         }
-        this.getConnection(function (connection) {
-            var query = connection.query("insert into " + me.tablename + " set ?", values, function (err, result) {
+        this.getConnection(function(connection) {
+            var query = connection.query("insert into " + me.tablename + " set ?", values, function(err, result) {
                 if (err) {
                     callback(err, null);
                 } else {
-                    callback(null, values["id_"]);//TODO　返回生成ＩＤ
+                    callback(null, values["id_"]); //TODO　返回生成ＩＤ
                 }
                 connection.release(); //release
             });
@@ -96,14 +97,14 @@ Table.prototype.insert = function (values, callback) {
 };
 
 //get_返回空为错误
-Table.prototype.get = function (ID, callback) {
+Table.prototype.get = function(ID, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     var me = this;
     if (ID != null && ID != "") {
-        this.getConnection(function (connection) {
-            var query = connection.query("select * from " + me.tablename + " where id_=?", ID, function (err, result) {
+        this.getConnection(function(connection) {
+            var query = connection.query("select * from " + me.tablename + " where id_=?", ID, function(err, result) {
                 if (err || result.length < 1) {
                     callback(err, result);
                 } else {
@@ -117,14 +118,14 @@ Table.prototype.get = function (ID, callback) {
 };
 
 //update
-Table.prototype.update = function (values, callback) {
+Table.prototype.update = function(values, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     var me = this;
     if (this.clearTable(values)) {
-        this.getConnection(function (connection) {
-            var query = connection.query("update  " + me.tablename + " set ? where id_=" + connection.escape(values.id_), values, function (err, result) {
+        this.getConnection(function(connection) {
+            var query = connection.query("update  " + me.tablename + " set ? where id_=" + connection.escape(values.id_), values, function(err, result) {
                 if (err) {
                     callback(err, result);
                 } else {
@@ -140,14 +141,14 @@ Table.prototype.update = function (values, callback) {
 
 
 //delete
-Table.prototype.remove = function (ID, callback) {
+Table.prototype.remove = function(ID, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     var me = this;
     if (ID != null && ID != "") {
-        this.getConnection(function (connection) {
-            var query = connection.query("delete  from  " + me.tablename + "  where id_=?", ID, function (err, result) {
+        this.getConnection(function(connection) {
+            var query = connection.query("delete  from  " + me.tablename + "  where id_=?", ID, function(err, result) {
                 if (err) {
                     callback(err, result);
                 } else {
@@ -161,14 +162,14 @@ Table.prototype.remove = function (ID, callback) {
 }
 
 //exists
-Table.prototype.exists = function (tablename, callback) {
+Table.prototype.exists = function(tablename, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     if (tablename) {
-        this.getConnection(function (connection) {
+        this.getConnection(function(connection) {
             var sql = "select table_name from information_schema.tables where table_schema='" + config_.database + "' and table_name='" + tablename + "'";
-            var query = connection.query(sql, function (err, result) {
+            var query = connection.query(sql, function(err, result) {
                 if (err) {
                     callback(err, result);
                 } else {
@@ -182,14 +183,14 @@ Table.prototype.exists = function (tablename, callback) {
 }
 
 //clear
-Table.prototype.clear = function (tablename, callback) {
+Table.prototype.clear = function(tablename, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     if (tablename) {
-        this.getConnection(function (connection) {
+        this.getConnection(function(connection) {
             var sql = "TRUNCATE TABLE " + tablename;
-            var query = connection.query(sql, function (err, result) {
+            var query = connection.query(sql, function(err, result) {
                 if (err) {
                     callback(err, result);
                 } else {
@@ -203,13 +204,13 @@ Table.prototype.clear = function (tablename, callback) {
 }
 
 //count
-Table.prototype.count = function (callback) {
+Table.prototype.count = function(callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     var me = this;
-    this.getConnection(function (connection) {
-        var query = connection.query("select count(*) as count from " + me.tablename, function (err, result) {
+    this.getConnection(function(connection) {
+        var query = connection.query("select count(*) as count from " + me.tablename, function(err, result) {
             if (err) {
                 callback(err, result);
             } else {
@@ -220,7 +221,7 @@ Table.prototype.count = function (callback) {
         logger.debug(query.sql);
     });
 }
-Table.prototype.countBySql = function (sql, p, callback) {
+Table.prototype.countBySql = function(sql, p, callback) {
     if ((typeof p == 'function') && p.constructor == Function) {
         callback = p;
     } else {
@@ -231,10 +232,10 @@ Table.prototype.countBySql = function (sql, p, callback) {
         }
     }
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
-    this.getConnection(function (connection) {
-        var query = connection.query("select count(*) as count from ( " + sql + " ) T", function (err, result) {
+    this.getConnection(function(connection) {
+        var query = connection.query("select count(*) as count from ( " + sql + " ) T", function(err, result) {
             if (err) {
                 callback(err, result);
             } else {
@@ -247,9 +248,9 @@ Table.prototype.countBySql = function (sql, p, callback) {
 }
 
 //query
-Table.prototype.where = function (params, callback) {
+Table.prototype.where = function(params, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     var sql = "select * from " + this.tablename + " where 1=1";
     if (this.clearTable(params)) {
@@ -258,8 +259,8 @@ Table.prototype.where = function (params, callback) {
         }
     }
 
-    this.getConnection(function (connection) {
-        var query = connection.query(sql, function (err, result) {
+    this.getConnection(function(connection) {
+        var query = connection.query(sql, function(err, result) {
             if (err) {
                 callback(err, result);
             } else {
@@ -270,17 +271,17 @@ Table.prototype.where = function (params, callback) {
         logger.debug(query.sql);
     });
 }
-Table.prototype.where = function (params, orders, callback) {
+Table.prototype.where = function(params, orders, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     var sql = "select * from " + this.tablename + " where 1=1";
-    if (this.clearTable(params)) {//参数
+    if (this.clearTable(params)) { //参数
         for (var pro in params) {
             sql += " and " + pro + "=" + this.pool.escape(params[pro]);
         }
     }
-    if (orders) {//排序
+    if (orders) { //排序
         for (var pro in orders) {
             sql += " order by " + pro + " " + orders[pro];
         }
@@ -290,8 +291,8 @@ Table.prototype.where = function (params, orders, callback) {
         callback = orders;
     }
     console.log(sql);
-    this.getConnection(function (connection) {
-        var query = connection.query(sql, function (err, result) {
+    this.getConnection(function(connection) {
+        var query = connection.query(sql, function(err, result) {
             if (err) {
                 callback(err, result);
             } else {
@@ -302,13 +303,13 @@ Table.prototype.where = function (params, orders, callback) {
         logger.debug(query.sql);
     });
 }
-Table.prototype.queryAll = function (callback) {
+Table.prototype.queryAll = function(callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     var me = this;
-    this.getConnection(function (connection) {
-        var query = connection.query("select * from " + me.tablename, function (err, result) {
+    this.getConnection(function(connection) {
+        var query = connection.query("select * from " + me.tablename, function(err, result) {
             if (err) {
                 callback(err, result);
             } else {
@@ -319,12 +320,12 @@ Table.prototype.queryAll = function (callback) {
         logger.debug(query.sql);
     });
 }
-Table.prototype.queryPage = function (page, callback) {
+Table.prototype.queryPage = function(page, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     var me = this;
-    this.count(function (err, result) {
+    this.count(function(err, result) {
         if (err) {
             callback(err, result);
         } else {
@@ -332,8 +333,8 @@ Table.prototype.queryPage = function (page, callback) {
             page.totalCount = result;
             page.totalPage = Math.ceil(page.totalCount / page.pageSize);
             //分页
-            me.getConnection(function (connection) {
-                var query = connection.query("select * from " + me.tablename + " limit " + page.start + "," + page.end + "", function (err, result) {
+            me.getConnection(function(connection) {
+                var query = connection.query("select * from " + me.tablename + " limit " + page.start + "," + page.end + "", function(err, result) {
                     if (err) {
                         callback(err, page);
                     } else {
@@ -348,9 +349,9 @@ Table.prototype.queryPage = function (page, callback) {
     });
 }
 
-Table.prototype.queryPageBySql = function (sql, page, params, callback) {
+Table.prototype.queryPageBySql = function(sql, page, params, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     if (params && (typeof params == 'function') && params.constructor == Function) {
         callback = params;
@@ -362,7 +363,7 @@ Table.prototype.queryPageBySql = function (sql, page, params, callback) {
         }
     }
     var me = this;
-    this.countBySql(sql, function (err, result) {
+    this.countBySql(sql, function(err, result) {
         if (err) {
             callback(err, result);
         } else {
@@ -370,8 +371,8 @@ Table.prototype.queryPageBySql = function (sql, page, params, callback) {
             page.totalCount = result;
             page.totalPage = Math.ceil(page.totalCount / page.pageSize);
             //分页
-            me.getConnection(function (connection) {
-                var query = connection.query(sql + "  limit " + page.start + "," + page.end + "", function (err, result) {
+            me.getConnection(function(connection) {
+                var query = connection.query(sql + "  limit " + page.start + "," + page.end + "", function(err, result) {
                     if (err) {
                         callback(err, result);
                     } else {
@@ -386,9 +387,9 @@ Table.prototype.queryPageBySql = function (sql, page, params, callback) {
     });
 }
 
-Table.prototype.queryPage = function (page, params, callback) {
+Table.prototype.queryPage = function(page, params, callback) {
     if (!callback) {
-        callback = function () { };
+        callback = function() {};
     }
     var sql = "select * from " + this.tablename + " where 1=1";
     if (this.clearTable(params)) {
@@ -400,50 +401,50 @@ Table.prototype.queryPage = function (page, params, callback) {
 }
 
 //executeSql
-Table.prototype.executeSql = function (sql, params, callback) {
-    if (!callback) {
-        callback = function () { };
-    }
-    if ((params)) {
-        for (var i = 0; i < params.length; i++) {
-            sql = sql.replace("?", this.pool.escape(params[i]));
+Table.prototype.executeSql = function(sql, params, callback) {
+        if (!callback) {
+            callback = function() {};
         }
-    }
-    this.getConnection(function (connection) {
-        var query = connection.query(sql, function (err, result) {
-            if (err) {
-                callback(err, result);
-            } else {
-                callback(null, result);
+        if ((params)) {
+            for (var i = 0; i < params.length; i++) {
+                sql = sql.replace("?", this.pool.escape(params[i]));
             }
-            connection.release(); //release
-        });
-        logger.debug(query.sql);
-    });
-}
-//execute
-/*Table.prototype.execute = function(sql,values, callback) {
-    if(!callback){
-        callback=function(){};
-    }
-    var me=this;
-    if (this.clearTable(values)) {
+        }
         this.getConnection(function(connection) {
-            var query = connection.query(sql, values, function(err, result) {
+            var query = connection.query(sql, function(err, result) {
                 if (err) {
-                    callback(err,result);
-                }else{
-                    callback(null,result);
+                    callback(err, result);
+                } else {
+                    callback(null, result);
                 }
                 connection.release(); //release
             });
             logger.debug(query.sql);
         });
     }
-};*/
+    //execute
+    /*Table.prototype.execute = function(sql,values, callback) {
+        if(!callback){
+            callback=function(){};
+        }
+        var me=this;
+        if (this.clearTable(values)) {
+            this.getConnection(function(connection) {
+                var query = connection.query(sql, values, function(err, result) {
+                    if (err) {
+                        callback(err,result);
+                    }else{
+                        callback(null,result);
+                    }
+                    connection.release(); //release
+                });
+                logger.debug(query.sql);
+            });
+        }
+    };*/
 
 //单例模式 创建一个 mysql连接池
-var createPool = function () {
+var createPool = function() {
     if (pool == null) {
         pool = mq.createPool(dbConfig);
     }
@@ -457,17 +458,17 @@ function DBUtil() {
     this.tables = [];
 };
 
-DBUtil.prototype.define = function (table) {
+DBUtil.prototype.define = function(table) {
     var me = this;
     if (util.isArray(table)) {
-        table.forEach(function (r) {
+        table.forEach(function(r) {
             me.tables.push([r.key, new Table(r.name, me, r.fields)]);
         });
     } else {
         me.tables.push([table.key, new Table(table.name, me, table.fields)]);
     }
 };
-DBUtil.prototype.get = function (tablename) {
+DBUtil.prototype.get = function(tablename) {
     if (tablename) {
         var _len = this.tables.length;
         for (i = 0; i < _len; i++) {
@@ -479,7 +480,7 @@ DBUtil.prototype.get = function (tablename) {
     return null;
 };
 
-exports.Instance = function () {
+exports.Instance = function() {
     if (db == null) {
         db = new DBUtil();
     }

@@ -2,7 +2,7 @@ var express = require('express');
 var path = require('path');
 var fs = require("fs");
 var favicon = require('serve-favicon');
-var morgan = require('morgan');//输出日志
+var morgan = require('morgan'); //输出日志
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var multiparty = require("connect-multiparty");
@@ -19,17 +19,17 @@ app.use(multiparty());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(session({ secret: 'tangdu', cookie: { maxAge: 60000 * 30 }, saveUninitialized: true, resave: true }));
+app.use(session({ secret: 'like', cookie: { maxAge: 60000 * 30 }, saveUninitialized: true, resave: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 //Session拦截控制
-app.all("*", function (req, res, next) {
+app.all("*", function(req, res, next) {
     //console.log(new Date()+"----------"+req.url+"------"+req.sessionID+"-----------"+req.ip);
     //对权限路径进行控制
     var _flag = false;
     var _isadmin = false;
     var _idadminurl = false;
-    Sys.permissionUrls.forEach(function (r) {
+    Sys.permissionUrls.forEach(function(r) {
         if (req.session.user == null && req.url.indexOf(r) > -1) {
             _flag = true;
             return;
@@ -37,8 +37,8 @@ app.all("*", function (req, res, next) {
     });
     //后台管理员权限过滤
     if (!_flag) {
-        Sys.adminUrls.forEach(function (r) {
-            if (req.url.indexOf(r) > -1) {//bug 得用正则
+        Sys.adminUrls.forEach(function(r) {
+            if (req.url.indexOf(r) > -1) { //bug 得用正则
                 _idadminurl = true;
                 return;
             }
@@ -72,7 +72,7 @@ app.all("*", function (req, res, next) {
 
 //控制层_根据routes文件名+方法_约定请求路径
 var routes = app.get("routes");
-fs.readdirSync(routes).forEach(function (fileName) {
+fs.readdirSync(routes).forEach(function(fileName) {
     var filePath = routes + fileName;
     var rname = fileName.substr(0, fileName.lastIndexOf("."));
     if (!fs.lstatSync(filePath).isDirectory()) {
@@ -85,7 +85,7 @@ fs.readdirSync(routes).forEach(function (fileName) {
 });
 
 ///404
-app.use(function (req, res, next) {
+app.use(function(req, res, next) {
     var err = new Error('Not Found');
     err.status = 404;
     res.render('error', {
@@ -96,7 +96,7 @@ app.use(function (req, res, next) {
 
 ///500
 if (app.get('env') === 'development') {
-    app.use(function (err, req, res) {
+    app.use(function(err, req, res) {
         logger.error(err);
         res.status(err.status || 500);
         res.render('error', {
@@ -111,7 +111,7 @@ if (app.get('env') === 'development') {
     console.log('Exit...........');
 });*/
 //应用未Catch异常
-process.on('uncaughtException', function (err) {
+process.on('uncaughtException', function(err) {
     if (err) {
         logger.error(err);
     }

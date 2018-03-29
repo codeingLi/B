@@ -5,25 +5,26 @@ var Page = require("../utils/page");
 var util = require("util");
 
 //首页
-router.get("/", function (req, res) {
+router.get("/", function(req, res) {
     res.redirect("/index");
 });
 //首页
 createView({ value: 'index' });
 
 //创建首页相关的连接
-Sys.cont.getArticleType().forEach(function (item) {
+Sys.cont.getArticleType().forEach(function(item) {
     createView(item);
 });
+
 function createView(link) {
     if (!link && !link.value) {
         return;
     }
-    router.get("/" + link.value, function (req, res, next) {
+    router.get("/" + link.value, function(req, res, next) {
         var Article = DB.get("Article");
         var ipage = req.query.ipage || 1;
         async.waterfall([
-            function (cb) {
+            function(cb) {
                 var data = {};
                 var params = null;
                 var page = new Page({ page: ipage, pageSize: 15 });
@@ -54,31 +55,31 @@ function createView(link) {
                     sql += " and type=?";
                     params = [req.url.substr(req.url.lastIndexOf("/") + 1)];
                 }
-                Article.queryPageBySql(sql, page, params, function (err) {
+                Article.queryPageBySql(sql, page, params, function(err) {
                     data.artidesLife = page;
                     cb(err, data);
                 });
             },
-            function (data, cb) {
+            function(data, cb) {
                 var page2 = new Page({ end: 10 });
                 var sql = "select * from t_ef_article t3 join (\n" +
                     "select count(1) rt,t1.id_ as arid from t_ef_article t1 left join \n" +
                     "t_ef_user_comment t2 on t1.id_=t2.artideid\n" +
                     "and t2.commendid is null \n" +
                     "group by t1.id_ ) t4 on t3.id_=t4.arid order by t4.rt desc";
-                Article.queryPageBySql(sql, page2, null, function (err, result) {
+                Article.queryPageBySql(sql, page2, null, function(err, result) {
                     data.topArtideList = page2.data;
                     cb(err, data);
                 });
             }
-        ], function (err, results) {
+        ], function(err, results) {
             if (err) {
                 next(err);
             }
             results.activeTab = "";
             results.title = link.key;
             if (link.value === "index") {
-                console.log(results)
+                // console.log(results)
                 res.render('index', results);
             } else {
                 res.render('view', results);
@@ -89,20 +90,20 @@ function createView(link) {
 
 
 //发表文章
-router.get("/push_article", function (req, res) {
+router.get("/push_article", function(req, res) {
     res.render('pushArticle', { flag: 'add' });
 });
 
 //编辑文章
-router.get("/edit_article/:articledID", function (req, res, next) {
+router.get("/edit_article/:articledID", function(req, res, next) {
     var Article = DB.get("Article");
     var articledID = req.params.articledID;
     if (articledID) {
-        Article.get(articledID, function (err, result) {
+        Article.get(articledID, function(err, result) {
             if (err) {
                 next(err);
             } else {
-                if (result.userid != req.session.user.id_) {//如果不是自己文章，error
+                if (result.userid != req.session.user.id_) { //如果不是自己文章，error
                     next(new Error("文章不存在"));
                 } else {
                     res.render('pushArticle', { article: result, flag: 'edit' });
@@ -115,21 +116,21 @@ router.get("/edit_article/:articledID", function (req, res, next) {
 });
 
 //登录
-router.get('/login', function (req, res) {
+router.get('/login', function(req, res) {
     res.render('signin', { message: false });
 });
 //注销
-router.get("/logout", function (req, res) {
+router.get("/logout", function(req, res) {
     req.session.user = null;
     res.redirect("/");
 });
 //注册
-router.get("/register", function (req, res) {
+router.get("/register", function(req, res) {
     res.render('register', { message: false });
 });
 
 //更新记录
-router.get("/update", function (req, res) {
+router.get("/update", function(req, res) {
     res.render('update');
 });
 
@@ -137,4 +138,3 @@ router.get("/update", function (req, res) {
 
 
 module.exports = router;
-

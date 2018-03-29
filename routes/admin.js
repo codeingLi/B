@@ -1,5 +1,4 @@
 /**
- * Created by tangdu on 2014-08-12.
  */
 
 var express = require('express');
@@ -10,12 +9,12 @@ var Page = require("../utils/page");
 var fs = require("fs");
 
 /*****************管理员文章列表*******************/
-router.get("/articlemanager", function (req, res, next) {
+router.get("/articlemanager", function(req, res, next) {
     var Article = DB.get("Article");
     var page = new Page({ page: req.query.ipage || 1, pageSize: 12 });
     var params = null;
     var sql = "select * from t_ef_article order by created desc,updated desc";
-    Article.queryPageBySql(sql, page, params, function (err) {
+    Article.queryPageBySql(sql, page, params, function(err) {
         if (err) {
             next(err);
         }
@@ -24,11 +23,11 @@ router.get("/articlemanager", function (req, res, next) {
 });
 
 
-router.get("/remove_article/:id_", function (req, res, next) {
+router.get("/remove_article/:id_", function(req, res, next) {
     var Article = DB.get("Article");
     var id_ = req.params.id_;
     if (id_ != null && id_ != "") {
-        Article.remove(id_, function (err) {
+        Article.remove(id_, function(err) {
             if (err) {
                 next(err);
             } else {
@@ -42,12 +41,12 @@ router.get("/remove_article/:id_", function (req, res, next) {
 
 /*******************用户管理列表*****************/
 
-router.get("/usermanager", function (req, res, next) {
+router.get("/usermanager", function(req, res, next) {
     var User = DB.get("User");
     var page = new Page({ page: req.query.ipage || 1, pageSize: 12 });
     var params = null;
     var sql = "select * from t_ef_user order by registertime desc";
-    User.queryPageBySql(sql, page, params, function (err) {
+    User.queryPageBySql(sql, page, params, function(err) {
         if (err) {
             next(err);
         }
@@ -55,11 +54,11 @@ router.get("/usermanager", function (req, res, next) {
     });
 });
 
-router.get("/remove_user/:id_", function (req, res, next) {
+router.get("/remove_user/:id_", function(req, res, next) {
     var User = DB.get("User");
     var id_ = req.params.id_;
     if (id_ != null && id_ != "") {
-        User.remove(id_, function (err) {
+        User.remove(id_, function(err) {
             if (err) {
                 next(err);
             } else {
@@ -71,10 +70,10 @@ router.get("/remove_user/:id_", function (req, res, next) {
     }
 });
 
-router.get("/article_top/:id_/:flag_", function (req, res, next) {
+router.get("/article_top/:id_/:flag_", function(req, res, next) {
     var Article = DB.get("Article");
     var article = { istop: req.params.flag_, id_: req.params.id_ };
-    Article.update(article, function (err, result) {
+    Article.update(article, function(err, result) {
         if (err) {
             next(err);
         } else {

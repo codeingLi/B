@@ -1,5 +1,4 @@
 /**
- * Created by tangdu on 14-3-8.
  */
 //分页对象
 var util = require("util");
@@ -26,7 +25,7 @@ function Page(config) {
     //util._extend(this,config);
     this.totalCount = 0;
     var totalPage = 0;
-    this.getTotalPage = function () {
+    this.getTotalPage = function() {
         return Math.ceil(this.totalPage / this.pageSize);
     }
     return this;
