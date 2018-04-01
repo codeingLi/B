@@ -7,9 +7,11 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var multiparty = require("connect-multiparty");
 var session = require("express-session");
-
 //Express配置
 var app = express();
+// 配置webSocket
+var expressWs = require('express-ws')(app);
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.set('routes', __dirname + '/routes/');
@@ -120,4 +122,4 @@ process.on('uncaughtException', function(err) {
 
 //临时文件存放地
 process.env.TMPDIR = "F://";
-module.exports = app;
+module.exports = app

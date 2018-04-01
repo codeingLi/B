@@ -48,7 +48,17 @@ body > .container {
 #goTopBtn:hover {
     background: #eaeaea url(../img/top.gif) no-repeat -113px 0;
 }
-
+#chatRoom {
+    position: fixed;
+    line-height:36px;
+    width:30px;
+    height: 30px;
+    right:10%;
+    bottom:35%;
+    cursor:pointer;
+    z-index: 99999;
+    background: url(../img/timg.jpg);    
+}
 .viewrecord{
     padding:5px;
     border-bottom:solid 1px #F6F6F6;

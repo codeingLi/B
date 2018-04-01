@@ -65,7 +65,7 @@ global.Sys = new function() {
                 });
                 return temp;
             },
-            siteName: "Codeing"
+            siteName: "Coding"
         },
         //权限认证
         this.permissionUrls = [
