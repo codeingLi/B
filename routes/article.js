@@ -11,8 +11,9 @@ var BAG_REG = /background-color:#.*?;/g;
 var fs = require("fs");
 var gm = require("gm");
 
+var rs = {};
 
-router.get("/view/:id_", function(req, res, next) {
+router.get("/view/:id_", function (req, res, next) {
     var Article = DB.get("Article");
     var User = DB.get("User");
     var UserReviews = DB.get("UserReviews"); //点赞、非赞
@@ -21,9 +22,9 @@ router.get("/view/:id_", function(req, res, next) {
     var pid = req.params.id_;
     if (pid) {
         async.waterfall([
-            function(cb) { //1 文章内容
+            function (cb) { //1 文章内容
                 var data = {};
-                Article.get(pid, function(err, result) {
+                Article.get(pid, function (err, result) {
                     if (!result) {
                         cb(err, null);
                     } else {
@@ -33,59 +34,59 @@ router.get("/view/:id_", function(req, res, next) {
                     }
                 });
             },
-            function(data, cb) { //2 用户信息
-                User.get(data.item.userid, function(err, result) {
+            function (data, cb) { //2 用户信息
+                User.get(data.item.userid, function (err, result) {
                     data.userInfo = result;
                     cb(err, data);
                 });
             },
-            function(data, cb) { //3 用户所发文章，按发文时间
+            function (data, cb) { //3 用户所发文章，按发文时间
                 var params = { userid: data.item.userid };
                 var orders = { "created": "desc" };
-                Article.where(params, orders, function(err, result) {
+                Article.where(params, orders, function (err, result) {
                     data.userArtide = result;
                     cb(err, data);
                 });
             },
-            function(data, cb) { //4 文章热度，按阅读数排名
+            function (data, cb) { //4 文章热度，按阅读数排名
                 var orders = { "readcount": "desc" };
-                Article.where(null, orders, function(err, result) {
+                Article.where(null, orders, function (err, result) {
                     data.hotArtide = result;
                     cb(err, data);
                 });
             },
-            function(data, cb) { //5 更新阅读次数
-                Article.executeSql("update t_ef_article set readcount=readcount+1 where id_=?", [pid], function(err, result) {
+            function (data, cb) { //5 更新阅读次数
+                Article.executeSql("update t_ef_article set readcount=readcount+1 where id_=?", [pid], function (err, result) {
                     cb(err, data);
                 });
             },
-            function(data, cb) { //6 文章被赞数
-                UserReviews.countBySql("select id_ from t_ef_user_reviews where type='3' and flag='1' and relid=?", [pid], function(err, result) {
+            function (data, cb) { //6 文章被赞数
+                UserReviews.countBySql("select id_ from t_ef_user_reviews where type='3' and flag='1' and relid=?", [pid], function (err, result) {
                     data.userupCot = result;
                     cb(err, data);
                 });
             },
-            function(data, cb) { //7 文章收藏数
-                UserAttention.countBySql("select id_ from t_ef_user_attention where type='2' and relid=?", [pid], function(err, result) {
+            function (data, cb) { //7 文章收藏数
+                UserAttention.countBySql("select id_ from t_ef_user_attention where type='2' and relid=?", [pid], function (err, result) {
                     data.shouCot = result;
                     cb(err, data);
                 });
             },
-            function(data, cb) { //8 文章非赞数
-                UserReviews.countBySql("select id_ from t_ef_user_reviews where type='3' and flag='0' and relid=?", [pid], function(err, result) {
+            function (data, cb) { //8 文章非赞数
+                UserReviews.countBySql("select id_ from t_ef_user_reviews where type='3' and flag='0' and relid=?", [pid], function (err, result) {
                     data.userdownCot = result;
                     cb(err, data);
                 });
             },
-            function(data, cb) { //9 文章回复
+            function (data, cb) { //9 文章回复
                 var params = [pid];
                 var page = new Page({ end: 10 });
-                UserComment.queryPageBySql("select t1.*,t2.username from t_ef_user_comment t1 join t_ef_user t2 on t1.userid=t2.id_ where commendid is null and artideid=? order by commenttime asc", page, params, function(err, result) {
+                UserComment.queryPageBySql("select t1.*,t2.username from t_ef_user_comment t1 join t_ef_user t2 on t1.userid=t2.id_ where commendid is null and artideid=? order by commenttime asc", page, params, function (err, result) {
                     data.comments = page.data;
                     cb(err, data);
                 });
             }
-        ], function(err, results) {
+        ], function (err, results) {
             if (err) {
                 next(err);
             }
@@ -97,12 +98,81 @@ router.get("/view/:id_", function(req, res, next) {
     }
 });
 
-router.post("/save_article", function(req, res, next) {
+function getClientIp(req) {
+    return req.connection.remoteAddress || req.headers['x-forwarded-for'] || req.headers['x-real-ip'] ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
+};
+router.ws('/view/:id_', function (ws, req) {
+    var id = req.params.id_;
+    var curArtical = rs[id];    //当前文章
+    var ip = getClientIp(req);  //获取当前用户的ip
+    ws.on('message', function (data) {
+        if (!curArtical) {
+            //如果当前文章没有被打开过
+            curArtical = {
+                totalNumber: 1, //当前用户总数
+                userInfo: [{    //在线的用户信息
+                    ip: !data.isLogin ? ip : '',
+                    id: data.isLogin ? id : '',
+                }],
+                data: [],   //当前页面的消息集合
+            };
+        } else {
+            var userInfo = curArtical.userInfo;            
+            if (data.isLogin) {
+                //如果用户登录,相同账号只算一次连接
+                //去重
+                curArtical.userInfo = userInfo.filter(function (elem) {
+                    if (elem.id != data.id) {
+                        return true;
+                    }
+                });
+                if (!data.isLeave) {
+                    curArtical.userInfo.push({
+                        ip: '',
+                        id: data.id,
+                    });
+                } 
+            } else {
+                //如果没有登录,同一个ip只算一个连接
+                // 去重
+                curArtical.userInfo = userInfo.filter(function (elem) {
+                    if (elem.ip != data.ip) {
+                        return true;
+                    }
+                });
+                if (!data.isLeave) {
+                    curArtical.userInfo.push({
+                        ip: ip,
+                        id: '',
+                    });
+                }
+            }
+        }
+        curArtical.totalNumber = curArtical.userInfo.length;
+        if (curArtical.totalNumber == 0) {
+            //如果连接数目为0
+            delete rs[id];
+        } else {
+            //不为0
+            rs[id] = curArtical;     
+            var sendData = {
+                totalNumber: curArtical.totalNumber,
+                data: '',
+            }   
+            console.log(curArtical)
+            ws.send(JSON.stringify(sendData));
+        }
+    });
+});
+
+router.post("/save_article", function (req, res, next) {
     var Article = DB.get("Article");
     var User = DB.get("User");
     var articleBean = req.body;
     if (articleBean.flag == "edit") { //修改
-        Article.get(articleBean.id_, function(err, result) {
+        Article.get(articleBean.id_, function (err, result) {
             if (err) {
                 next(err);
             } else {
@@ -114,7 +184,7 @@ router.post("/save_article", function(req, res, next) {
                     articleBean.userid = req.session.user.id_;
                     articleBean.username = req.session.user.username;
                     articleBean.content = articleBean.content.replace(BAG_REG, '');
-                    Article.update(articleBean, function(err, result) {
+                    Article.update(articleBean, function (err, result) {
                         if (err) {
                             next(err);
                         } else {
@@ -132,18 +202,18 @@ router.post("/save_article", function(req, res, next) {
         articleBean.username = req.session.user.username;
         articleBean.content = articleBean.content.replace(BAG_REG, '');
         async.waterfall([
-            function(cb) {
-                Article.insert(articleBean, function(err, result) {
+            function (cb) {
+                Article.insert(articleBean, function (err, result) {
                     cb(err, {});
                 });
             },
-            function(data, cb) {
+            function (data, cb) {
                 var sql = "update t_ef_user t set t.integral=t.integral+1 where t.id_=?";
-                User.executeSql(sql, [req.session.user.id_], function(err, result) {
+                User.executeSql(sql, [req.session.user.id_], function (err, result) {
                     cb(err, {});
                 });
             }
-        ], function(err, result) {
+        ], function (err, result) {
             if (err) {
                 next(err);
             } else {
@@ -155,7 +225,7 @@ router.post("/save_article", function(req, res, next) {
 
 
 //文件上传
-router.get("/upload", function(req, res) {
+router.get("/upload", function (req, res) {
     if (!req.files.upfile) {
         res.json({ 'state': 'FAILURE' });
         return;
@@ -169,14 +239,14 @@ router.get("/upload", function(req, res) {
     }
     var file_name = req.files.upfile.name;
     // 移动文件
-    fs.rename(tmp_path, target_path, function(err) {
+    fs.rename(tmp_path, target_path, function (err) {
         if (err) {
             logger.error(err);
             res.json({ 'state': 'FAILURE' });
         }
         var imageMagick = gm.subClass({ imageMagick: true });
         imageMagick(target_path)
-            .resize(80, 80).autoOrient().write(target_path, function(err) {
+            .resize(80, 80).autoOrient().write(target_path, function (err) {
                 if (err) {
                     logger.error(err);
                     res.json({ 'state': 'FAILURE' });

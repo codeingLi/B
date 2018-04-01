@@ -3,7 +3,7 @@ var router = express.Router();
 var async = require("async");
 var Page = require("../utils/page");
 var util = require("util");
-
+var WebSocketServer = require('websocket').server;
 //首页
 router.get("/", function(req, res) {
     res.redirect("/index");

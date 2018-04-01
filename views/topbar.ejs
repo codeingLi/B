@@ -61,3 +61,10 @@
     </div>
 </div>
 <div class="custline"></div>
+<script>
+    var user = '<%= locals.user %>',
+        topbar = {
+            'username': '<%= locals.user != null ? locals.user.username : "" %>',
+            'id': '<%= locals.user != null ? locals.user.id_ : "" %>',
+        };
+</script>
