@@ -108,21 +108,23 @@ router.ws('/view/:id_', function (ws, req) {
     var curArtical = rs[id];    //当前文章
     var ip = getClientIp(req);  //获取当前用户的ip
     ws.on('message', function (data) {
+        data = JSON.parse(data);
+        data.ip = ip;
         if (!curArtical) {
-            //如果当前文章没有被打开过
+            //当前文章第一次被打开的时候,初始化 当前文章信息
             curArtical = {
                 totalNumber: 1, //当前用户总数
                 userInfo: [{    //在线的用户信息
-                    ip: !data.isLogin ? ip : '',
-                    id: data.isLogin ? id : '',
+                    ip: !req.session.user ? ip : '',
+                    id: req.session.user ? id : '',
                 }],
                 data: [],   //当前页面的消息集合
             };
         } else {
+            //当前文章不是第一次打开, 填充当前文章信息
             var userInfo = curArtical.userInfo;            
-            if (data.isLogin) {
+            if (req.session.user) {
                 //如果用户登录,相同账号只算一次连接
-                //去重
                 curArtical.userInfo = userInfo.filter(function (elem) {
                     if (elem.id != data.id) {
                         return true;
@@ -133,24 +135,59 @@ router.ws('/view/:id_', function (ws, req) {
                         ip: '',
                         id: data.id,
                     });
-                } 
+                }
             } else {
                 //如果没有登录,同一个ip只算一个连接
-                // 去重
                 curArtical.userInfo = userInfo.filter(function (elem) {
                     if (elem.ip != data.ip) {
                         return true;
                     }
                 });
                 if (!data.isLeave) {
+                    //建立连接
                     curArtical.userInfo.push({
                         ip: ip,
                         id: '',
                     });
-                }
+                } 
+            }
+            // 判断用户是否 发送了消息
+            var d = {};
+            if (data.msg != '') {
+                d.username = data.name;
+                d.time = new Date(+new Date()+8*3600*1000).toISOString().replace(/T/g,' ').replace(/\.[\d]{3}Z/,'');
+                d.msg = data.msg;
+            }
+            if (d.time) {
+                curArtical.data.push(JSON.stringify(d));
             }
         }
         curArtical.totalNumber = curArtical.userInfo.length;
+
+    });
+    ws.on('close', function (data) {
+        var userInfo = curArtical.userInfo;  
+        if (req.session.user) {
+            //如果登录了
+            curArtical.userInfo = userInfo.filter(function (elem) {
+                if (elem.id != req.session.user.id) {
+                    return true;
+                }
+            });
+        } else {
+            curArtical.userInfo = userInfo.filter(function (elem) {
+                if (elem.ip != ip) {
+                    return true;
+                }
+            });
+        }
+        if (curArtical.totalNumber == 0) {
+            //如果连接数目为0
+            delete rs[id];
+        }
+        curArtical.totalNumber = curArtical.userInfo.length; 
+    });
+    var timer = setInterval(function () {
         if (curArtical.totalNumber == 0) {
             //如果连接数目为0
             delete rs[id];
@@ -159,12 +196,18 @@ router.ws('/view/:id_', function (ws, req) {
             rs[id] = curArtical;     
             var sendData = {
                 totalNumber: curArtical.totalNumber,
-                data: '',
+                data: curArtical.data,
             }   
-            console.log(curArtical)
-            ws.send(JSON.stringify(sendData));
+            if (ws.readyState != ws.OPEN) {
+                return;
+            } else {
+                ws.send(JSON.stringify(sendData));
+            }
         }
-    });
+    },"300");
+    if (curArtical.totalNumber == 0) {
+        clearInterval(timer);
+    }
 });
 
 router.post("/save_article", function (req, res, next) {

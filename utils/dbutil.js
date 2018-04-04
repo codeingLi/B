@@ -290,7 +290,6 @@ Table.prototype.where = function(params, orders, callback) {
     if ((typeof orders == 'function') && orders.constructor == Function) {
         callback = orders;
     }
-    console.log(sql);
     this.getConnection(function(connection) {
         var query = connection.query(sql, function(err, result) {
             if (err) {

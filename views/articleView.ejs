@@ -132,6 +132,18 @@
                 <% }) %>
             </div>
         </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                聊天室
+                <span id="currentNumber" style="float: right"></span>
+            </div>
+            <div class="panel-body padding0" id="chatRoomContainer">
+            </div>
+            <div class="panel-body padding0" style="margin-top: 20px;">
+                <input type="text" id="chatRoomText">
+                <button id="chatRoomBtn">发送</button>
+            </div>
+        </div>
         <!--<div class="panel panel-default">
             <div class="panel-heading">
                 -并无此文-
@@ -173,7 +185,6 @@
         </div>
     </form>
 </div>
-<span id="chatRoom"></span>
 <div id="goTopBtn"></div>
 <%- include footer.ejs %>
 <script type="text/javascript">
@@ -349,22 +360,36 @@
             $("#commmentsDiv").append('<div class="center-block" style="width: 300px;">还没有评论，沙发等你来抢,+_+</div>');
         }
     }
+</script>
+<script>
     var pathname = window.location.pathname,
-        hostname = window.location.hostname,
-        port = window.location.port,
-        articalId = pathname.split("/")[3],
-        ws = new WebSocket(`ws://${hostname}:${port}/article/view/${articalId}`),
-        data = {
-            id: '', //当前用户的id
-            name: '游客',//当前用户的name
-            isLeave: false, //当前用户是否离开了页面
-            ip:'',  //当前用户的ip
-            msg: "",    //当前用户发送的信息,实时更新
-            isLogin: false, //当前用户是否 为 登录用户
-        };  
-    
-    ws.onmessage=function(e){  
-        console.log(e);  
+    hostname = window.location.hostname,
+    port = window.location.port,
+    articalId = pathname.split("/")[3],
+    ws = new WebSocket(`ws://${hostname}:${port}/article/view/${articalId}`),
+    data = {
+        id: '', //当前用户的id
+        name: '游客',//当前用户的name
+        isLeave: false, //当前用户是否离开了页面
+        ip:'',  //当前用户的ip
+        msg: "",    //当前用户发送的信息,实时更新
+    };  
+    chatRoomText = document.getElementById("chatRoomText"),
+    ws.onmessage=function(e){ 
+        var data = JSON.parse(e.data);
+        var charContentArray = data.data;
+        var html = "";
+        $("#currentNumber").html("当前人数:" + data.totalNumber); 
+        for (var i = 0; i < charContentArray.length; i++) {
+            var d = JSON.parse(charContentArray[i]);
+            html =  html + `<div class='col-md-12 viewrecord' style='white-space: normal'>
+                        <span style="color:grey">${d.username}:</span> 
+                        <span>${d.msg}</span> 
+                        <span style="float:right">${d.time}</span> 
+                    </div>
+                    `;
+        }
+        $("#chatRoomContainer").html(html);
     };  
     ws.onerror=function(err){  
         console.err(err);  
@@ -372,19 +397,31 @@
     ws.onopen=function(){  
         //如果登录
         if (topbar.username != '') {
-            console.log(topbar.username)
             data.name = topbar.username;
             data.id = topbar.id;
-            data.isLogin = true;
         }
-        console.log(data)
-        ws.send(data);  
+        ws.send(JSON.stringify(data));  
     };  
-    ws.onclose=function(){  
-        ws.send("leave");          
-        console.log('_close');  
-    };  
-        
+    // ws.onclose=function(){ 
+    //     data.isLeave = true; 
+    //     ws.send(data);          
+    //     console.log('_close');  
+    // };  
+    window.onbeforeunload=function (event){
+        if(event.clientX>document.body.clientWidth && event.clientY < 0 || event.altKey){
+            ws.close();
+        }
+    };
+    $("#chatRoomBtn").click(function () {
+        var chatRoom = $("#chatRoomText")
+        chatRoomText = chatRoom.val();
+        if (chatRoomText.trim() != '') {
+            data.msg = chatRoomText.trim();
+            ws.send(JSON.stringify(data));
+            chatRoom.val("");
+        }
+    });
+
     var id ='<%= item.userid %>';   //作者文章id
     var name ='<%= item.username %>';   //作者name
 </script>
